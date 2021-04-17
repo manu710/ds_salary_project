@@ -19,19 +19,19 @@ from selenium import webdriver
 import time
 import pandas as pd
 
-def get_jobs(keyword, num_jobs, verbose,path,slp_time):
 
+def get_jobs(keyword, num_jobs, verbose, path, slp_time):
     '''Gathers jobs as a dataframe, scraped from Glassdoor'''
 
-    #Initializing the webdriver
+    # Initializing the webdriver
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
     options.add_argument("--incognito")
 
-    #Uncomment the line below if you'd like to scrape without a new Chrome window every time.
-    #options.add_argument('headless')
+    # Uncomment the line below if you'd like to scrape without a new Chrome window every time.
+    # options.add_argument('headless')
 
-    #Change the path to where chromedriver is in your home folder.
+    # Change the path to where chromedriver is in your home folder.
     # driver = webdriver.Chrome(executable_path="/Users/omersakarya/Documents/GitHub/scraping-glassdoor-selenium/chromedriver", options=options)
     # path = "ChromeDriver/chromedriver"   # I have made a folder:"ChromeDriver" and put file"chromedriver.exe"inside this folder.
     #         ^^^Folder^^^/^^^this is .exe file
@@ -39,20 +39,22 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
     # driver.set_window_size(1120, 1000)
 
     # url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword='+ keyword +'&includeNoSalaryJobs=false&radius=100'
-    url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword=' + keyword + '&jobType=all&fromAge=-1&minSalary=0&includeNoSalaryJobs=false&radius=100&cityId=-1&minRating=0.0&industryId=-1&sgocId=-1&seniorityType=all&companyId=-1&employerSizes=0&applicationType=0&remoteWorkType=0'
+    url = 'https://www.glassdoor.com/Job/jobs.htm?sc.keyword=' + keyword + \
+        '&jobType=all&fromAge=-1&minSalary=0&includeNoSalaryJobs=false&radius=100&cityId=-1&minRating=0.0&industryId=-1&sgocId=-1&seniorityType=all&companyId=-1&employerSizes=0&applicationType=0&remoteWorkType=0'
 
     # url = 'https://www.glassdoor.com/Job/jobs.htm?sc.generalKeyword=%22data+scientist%22?minSalary=15000&includeNoSalaryJobs=false&maxSalary=379000'
 
     driver.get(url)
     jobs = []
 
-    while len(jobs) < num_jobs:  #If true, should be still looking for new jobs.
+    # If true, should be still looking for new jobs.
+    while len(jobs) < num_jobs:
 
-        #Let the page load. Change this number based on your internet speed.
-        #Or, wait until the webpage is loaded, instead of hardcoding it.
+        # Let the page load. Change this number based on your internet speed.
+        # Or, wait until the webpage is loaded, instead of hardcoding it.
         time.sleep(slp_time)
 
-        #Test for the "Sign Up" prompt and get rid of it.
+        # Test for the "Sign Up" prompt and get rid of it.
         # try:
         #     driver.find_element_by_class_name("selected").click()
         # except ElementClickInterceptedException:
@@ -61,36 +63,47 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
         # time.sleep(.1)
 
         try:
-            driver.find_element_by_class_name("ModalStyle__xBtn___29PT9").click()  #clicking to the X.
+            # clicking to the X.
+            driver.find_element_by_class_name(
+                "ModalStyle__xBtn___29PT9").click()
         except NoSuchElementException:
             pass
 
         # found_popup = False
         currentJoblist = 0
 
-
         if not (len(jobs) >= num_jobs):
-            listButtonsCount = len(driver.find_elements_by_xpath('//*[@id="MainCol"]//div[1]//ul//li[@data-test="jobListing"]'))
-            print("&&& job butons:" +str(listButtonsCount))
-            #Going through each job in this page
+            listButtonsCount = len(driver.find_elements_by_xpath(
+                '//*[@id="MainCol"]//div[1]//ul//li[@data-test="jobListing"]'))
+            print("&&& job butons:" + str(listButtonsCount))
+            # Going through each job in this page
             # job_buttons = driver.find_elements_by_class_name("jl")  #jl for Job Listing. These are the buttons we're going to click.
-            job_buttons = driver.find_elements_by_xpath('.//*[@id="MainCol"]//a[@class="jobLink"]')  #jl for Job Listing. These are the buttons we're going to click.
+            # jl for Job Listing. These are the buttons we're going to click.
+            job_buttons = driver.find_elements_by_xpath(
+                './/*[@id="MainCol"]//a[@class="jobLink"]')
 
             for job_button in job_buttons:
 
-                print("Progress: {}".format("" + str(len(jobs)) + "/" + str(num_jobs)))
+                print("Progress: {}".format(
+                    "" + str(len(jobs)) + "/" + str(num_jobs)))
                 if len(jobs) >= num_jobs:
                     break
 
+                time.sleep(2)
 
-                job_button.click()  #You might
+                try:
+                    job_button.click()  # You might
+
+                except ElementNotInteractableException:
+                    pass
 
                 time.sleep(4)
 
-                #___________ code to kill the sign-up pop-up after it render on screen
+                # ___________ code to kill the sign-up pop-up after it render on screen
                 # if not found_popup:
                 try:
-                    driver.find_element_by_css_selector('[alt="Close"]').click()
+                    driver.find_element_by_css_selector(
+                        '[alt="Close"]').click()
                     # print("&&& line 89")
                     # found_popup = True
                 except NoSuchElementException:
@@ -99,31 +112,34 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
 
                 # __________
 
-
                 collected_successfully = False
 
                 while not collected_successfully:
                     try:
                         # company_name = driver.find_element_by_xpath('.//div[@class="employerName"]').text
-                        company_name = driver.find_element_by_xpath('//*[@id="MainCol"]//li['+ str(currentJoblist + 1) +']//div[2]//a//span').text
+                        company_name = driver.find_element_by_xpath(
+                            '//*[@id="MainCol"]//li[' + str(currentJoblist + 1) + ']//div[2]//a//span').text
 
                         # location = driver.find_element_by_xpath('.//div[@class="location"]').text
-                        location = driver.find_element_by_xpath('//*[@id="MainCol"]//li['+ str(currentJoblist + 1) +']//div[2]//div[2]/span').text
+                        location = driver.find_element_by_xpath(
+                            '//*[@id="MainCol"]//li[' + str(currentJoblist + 1) + ']//div[2]//div[2]/span').text
 
                         # job_title = driver.find_element_by_xpath('.//div[contains(@class, "title")]').text
-                        job_title = driver.find_element_by_xpath('//*[@id="MainCol"]//li['+ str(currentJoblist + 1) +']//a[@data-test="job-link"]').text
+                        job_title = driver.find_element_by_xpath(
+                            '//*[@id="MainCol"]//li[' + str(currentJoblist + 1) + ']//a[@data-test="job-link"]').text
 
-                        job_description = driver.find_element_by_xpath('.//div[@class="jobDescriptionContent desc"]').text
+                        job_description = driver.find_element_by_xpath(
+                            './/div[@class="jobDescriptionContent desc"]').text
                         # //*[@id="JDCol"]/div/article/div/div[1]/div/div/div[3]/div[2]/div[1]
 
                         # job_function is an additional information not included in previous code
                         # job_function = driver.find_element_by_xpath('//*[@id="JDCol"]//strong[text()[1]="Job Function"]//following-sibling::*').text
 
-                        job_function = driver.find_element_by_xpath('//*[@id="JDCol"]/div/article/div/div[1]/div/div/div[3]/div[2]/div[2]').text
+                        job_function = driver.find_element_by_xpath(
+                            '//*[@id="JDCol"]/div/article/div/div[1]/div/div/div[3]/div[2]/div[2]').text
 
-                        industry = driver.find_element_by_xpath('//*[@id="JDCol"]/div/article/div/div[1]/div/div/div[3]/div[2]/div[3]').text
-
-                        
+                        industry = driver.find_element_by_xpath(
+                            '//*[@id="JDCol"]/div/article/div/div[1]/div/div/div[3]/div[2]/div[3]').text
 
                         collected_successfully = True
                     except:
@@ -133,15 +149,17 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
 
                 try:
                     # salary_estimate = driver.find_element_by_xpath('.//span[@class="gray small salary"]').text
-                    salary_estimate = driver.find_element_by_xpath('//*[@id="JDCol"]//span[@data-test="detailSalary"]').text
+                    salary_estimate = driver.find_element_by_xpath(
+                        '//*[@id="JDCol"]//span[@data-test="detailSalary"]').text
                 except NoSuchElementException:
-                    salary_estimate = -1 #You need to set a "not found value. It's important."
+                    salary_estimate = -1  # You need to set a "not found value. It's important."
 
                 try:
                     # rating = driver.find_element_by_xpath('.//span[@class="rating"]').text
-                    rating = driver.find_element_by_xpath('//*[@id="JDCol"]//span[@data-test="detailRating"]').text
+                    rating = driver.find_element_by_xpath(
+                        '//*[@id="JDCol"]//span[@data-test="detailRating"]').text
                 except NoSuchElementException:
-                    rating = -1 #You need to set a "not found value. It's important."
+                    rating = -1  # You need to set a "not found value. It's important."
 
                 # #Printing for debugging
                 if verbose:
@@ -154,13 +172,14 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
                     print("Job Function: {}".format(job_function))
                     print("Industry: {}".format(industry))
 
-                #Going to the Company tab...
-                #clicking on this:
-                #<div class="tab" data-tab-type="overview"><span>Company</span></div>
+                # Going to the Company tab...
+                # clicking on this:
+                # <div class="tab" data-tab-type="overview"><span>Company</span></div>
                 time.sleep(1)
                 try:
                     # driver.find_element_by_xpath('.//div[@class="tab" and @data-tab-type="overview"]').click()
-                    driver.find_element_by_xpath('.//div[@id="SerpFixedHeader"]//span[text()="Company"]').click()
+                    driver.find_element_by_xpath(
+                        './/div[@id="SerpFixedHeader"]//span[text()="Company"]').click()
 
                 #     try:
                 #         #<div class="infoEntity">
@@ -168,54 +187,61 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
                 #         #    <span class="value">San Francisco, CA</span>
                 #         #</div>
                 #         headquarters = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Headquarters"]//following-sibling::*').text
-                         # ^^^^^^^^^^ couldn't abel to find "headquarters"
+                    # ^^^^^^^^^^ couldn't abel to find "headquarters"
                 #     except NoSuchElementException:
                 #         headquarters = -1
 
                     try:
                         # size = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Size"]//following-sibling::*').text
-                        size = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Size"]//following-sibling::*').text
+                        size = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Size"]//following-sibling::*').text
                     except NoSuchElementException:
                         size = -1
 
                     try:
                         # founded = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Founded"]//following-sibling::*').text
-                        founded = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Founded"]//following-sibling::*').text
+                        founded = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Founded"]//following-sibling::*').text
                     except NoSuchElementException:
                         founded = -1
 
                     try:
                         # type_of_ownership = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Type"]//following-sibling::*').text
-                        type_of_ownership = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Type"]//following-sibling::*').text
+                        type_of_ownership = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Type"]//following-sibling::*').text
                     except NoSuchElementException:
                         type_of_ownership = -1
 
                     try:
                         # industry = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Industry"]//following-sibling::*').text
-                        industry = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Industry"]//following-sibling::*').text
+                        industry = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Industry"]//following-sibling::*').text
                     except NoSuchElementException:
                         industry = -1
 
                     try:
                         # sector = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Sector"]//following-sibling::*').text
-                        sector = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Sector"]//following-sibling::*').text
+                        sector = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Sector"]//following-sibling::*').text
                     except NoSuchElementException:
                         sector = -1
 
                     try:
                         # revenue = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Revenue"]//following-sibling::*').text
-                        revenue = driver.find_element_by_xpath('.//div[@id="EmpBasicInfo"]//span[text()="Revenue"]//following-sibling::*').text
+                        revenue = driver.find_element_by_xpath(
+                            './/div[@id="EmpBasicInfo"]//span[text()="Revenue"]//following-sibling::*').text
                     except NoSuchElementException:
                         revenue = -1
 
                 #     try:
                 #         competitors = driver.find_element_by_xpath('.//div[@class="infoEntity"]//label[text()="Competitors"]//following-sibling::*').text
-                          # ^^^^^^^^^^^ couldn't able to find "competitors"
+                        # ^^^^^^^^^^^ couldn't able to find "competitors"
                 #     except NoSuchElementException:
                 #         competitors = -1
 
-                except NoSuchElementException:  #Rarely, some job postings do not have the "Company" tab.
-                #     headquarters = -1
+                # Rarely, some job postings do not have the "Company" tab.
+                except NoSuchElementException:
+                    #     headquarters = -1
                     size = -1
                     founded = -1
                     type_of_ownership = -1
@@ -223,7 +249,6 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
                     sector = -1
                     revenue = -1
                 #     competitors = -1
-
 
                 if verbose:
 
@@ -237,42 +262,47 @@ def get_jobs(keyword, num_jobs, verbose,path,slp_time):
                     # print("Competitors: {}".format(competitors))
                     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-                jobs.append({"Job Title" : job_title,
-                "Salary Estimate" : salary_estimate,
-                "Job Function" : job_function,
-                "Industry" : industry,
-                "Job Description" : job_description,
-                "Company Name" : company_name,
-                "Rating" : rating,
-                "Location" : location,
-                "Size" : size,
-                "Founded" : founded,
-                "Type of ownership" : type_of_ownership,
-                "Industry" : industry,
-                "Sector" : sector,
-                "Revenue" : revenue})
+                jobs.append({"Job Title": job_title,
+                             "Salary Estimate": salary_estimate,
+                             "Job Function": job_function,
+                             "Industry": industry,
+                             "Job Description": job_description,
+                             "Company Name": company_name,
+                             "Rating": rating,
+                             "Location": location,
+                             "Size": size,
+                             "Founded": founded,
+                             "Type of ownership": type_of_ownership,
+                             "Industry": industry,
+                             "Sector": sector,
+                             "Revenue": revenue})
                 # "Headquarters" : headquarters,
                 # "Competitors" : competitors})
                 # ^^^^^^^^ couldn't able to find "Headquarters" and "Competitors"
-                #add job to jobs
+                # add job to jobs
 
-                currentJoblist=currentJoblist+1 # increasing the count of the list of buttons clicked and saved
+                # increasing the count of the list of buttons clicked and saved
+                currentJoblist = currentJoblist+1
 
-                if not (currentJoblist < listButtonsCount): # to check the list last button and to go to next page
-                        currentJoblist = 0  # resetting the button list count for new page button's list
-                        break
-            #Clicking on the "next page" button
+                # to check the list last button and to go to next page
+                if not (currentJoblist < listButtonsCount):
+                    currentJoblist = 0  # resetting the button list count for new page button's list
+                    break
+            # Clicking on the "next page" button
             try:
                 # driver.find_element_by_xpath('.//li[@class="next"]//a').click()
-                driver.find_element_by_xpath('//*[@id="FooterPageNav"]//a[@data-test="pagination-next"]').click()
+                driver.find_element_by_xpath(
+                    '//*[@id="FooterPageNav"]//a[@data-test="pagination-next"]').click()
 
             except NoSuchElementException:
-                print("Scraping terminated before reaching target number of jobs. Needed {}, got {}.".format(num_jobs, len(jobs)))
+                print("Scraping terminated before reaching target number of jobs. Needed {}, got {}.".format(
+                    num_jobs, len(jobs)))
                 break
 
-    return pd.DataFrame(jobs)  #This line converts the dictionary object into a pandas DataFrame.
+    # This line converts the dictionary object into a pandas DataFrame.
+    return pd.DataFrame(jobs)
 
 
-x = get_jobs("data scientist", 5, True,'chromedriver',2)
+x = get_jobs("data scientist", 1000, True, 'chromedriver', 2)
 print(x)
 x.to_csv('salary_data.csv')
